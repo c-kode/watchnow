@@ -60,6 +60,7 @@ function validateRecommendations(parsed: unknown): Recommendation[] {
   return recs as Recommendation[];
 }
 
+// Fetches poster from TMDB using the read-access token set in TMDB_READ_TOKEN env var
 async function fetchPoster(title: string, year: number, type: 'Movie' | 'Series'): Promise<string | undefined> {
   const token = process.env.TMDB_READ_TOKEN;
   if (!token) return undefined;
