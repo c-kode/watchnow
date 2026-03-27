@@ -70,8 +70,9 @@ app.get('/health', async (_req: Request, res: Response) => {
         'https://api.themoviedb.org/3/search/movie?query=Inception&year=2010&page=1',
         { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' }, signal: AbortSignal.timeout(5000) }
       );
-      const d = await r.json() as { results?: Array<{ poster_path?: string | null }> };
-      tmdbTest = d.results?.[0]?.poster_path ?? 'no-poster';
+      const text = await r.text();
+      const d = JSON.parse(text) as { results?: Array<{ poster_path?: string | null }> };
+      tmdbTest = `status=${r.status} poster=${d.results?.[0]?.poster_path ?? 'none'} tokenLen=${token.length}`;
     } catch (e) {
       tmdbTest = `error: ${String(e)}`;
     }
