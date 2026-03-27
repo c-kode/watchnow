@@ -4,6 +4,11 @@ Answer 7 questions. Get the perfect thing to watch.
 
 WatchNow is an AI-powered streaming recommendation assistant. It asks about your mood, available time, who you're watching with, and what services you have — then returns 1–3 personalised picks with explanations of why each fits.
 
+## Live URLs
+
+- **Frontend:** https://frontend-alpha-ten-34.vercel.app
+- **Backend:** https://backend-production-6a8f.up.railway.app
+
 ## Tech Stack
 
 - **Frontend:** Next.js 14 + TypeScript + Tailwind CSS (Vercel)
