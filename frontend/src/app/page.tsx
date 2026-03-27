@@ -19,7 +19,7 @@ function setAnswerForStep(
   const next = { ...answers };
   switch (step) {
     case 1:
-      next.mood = value as RecommendRequest['mood'];
+      next.mood = (Array.isArray(value) ? value : [value]) as RecommendRequest['mood'];
       break;
     case 2:
       next.time = value as RecommendRequest['time'];
