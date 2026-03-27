@@ -24,18 +24,19 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ url: null });
     }
 
-    const data = await res.json() as { Image?: string };
+    const data = await res.json() as { Image?: string; AbstractURL?: string };
     const imagePath = data.Image;
 
+    // Debug: return full info so we can see what DDG sends
     if (!imagePath) {
-      return NextResponse.json({ url: null });
+      return NextResponse.json({ url: null, debug: { hasImage: false, abstractUrl: data.AbstractURL ?? null } });
     }
 
     const url = imagePath.startsWith('http')
       ? imagePath
       : `https://duckduckgo.com${imagePath}`;
 
-    return NextResponse.json({ url });
+    return NextResponse.json({ url, debug: { raw: imagePath } });
   } catch {
     return NextResponse.json({ url: null });
   }
