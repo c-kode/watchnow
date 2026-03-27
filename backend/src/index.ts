@@ -62,7 +62,11 @@ app.use('/api/recommend', recommendRouter);
 
 // Health check
 app.get('/health', (_req: Request, res: Response) => {
-  res.json({ status: 'ok', timestamp: Date.now() });
+  res.json({
+    status: 'ok',
+    timestamp: Date.now(),
+    tmdb: !!process.env.TMDB_READ_TOKEN,
+  });
 });
 
 // Global error handler
