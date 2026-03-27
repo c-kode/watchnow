@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
       : `https://duckduckgo.com${imagePath}`;
 
     return NextResponse.json({ url, debug: { raw: imagePath } });
-  } catch {
-    return NextResponse.json({ url: null });
+  } catch (err) {
+    return NextResponse.json({ url: null, debug: { error: String(err) } });
   }
 }
