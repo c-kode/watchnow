@@ -4,9 +4,7 @@ export const QUESTIONS: QuestionConfig[] = [
   {
     id: 'mood',
     title: 'What are you in the mood for?',
-    subtitle: 'Pick up to 2',
-    type: 'multi',
-    maxSelections: 2,
+    type: 'single',
     options: [
       { value: 'light-fun', label: 'Light & fun' },
       { value: 'intense-suspenseful', label: 'Intense & suspenseful' },
