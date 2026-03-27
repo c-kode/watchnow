@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
     });
 
     if (!res.ok) {
-      return NextResponse.json({ url: null });
+      return NextResponse.json({ url: null, debug: { status: res.status, statusText: res.statusText } });
     }
 
     const data = await res.json() as { Image?: string; AbstractURL?: string };
