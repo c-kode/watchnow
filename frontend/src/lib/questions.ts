@@ -58,13 +58,8 @@ export const QUESTIONS: QuestionConfig[] = [
     options: [
       { value: 'english-only', label: 'English only' },
       { value: 'open-subtitles', label: 'Open to subtitles' },
-      { value: 'specific', label: 'Specific language' },
+      { value: 'specific', label: 'Any language' },
     ],
-    conditionalText: {
-      trigger: 'specific',
-      placeholder: 'e.g. French, Korean, Spanish…',
-      fieldKey: 'language.specific',
-    },
   },
   {
     id: 'popularity',

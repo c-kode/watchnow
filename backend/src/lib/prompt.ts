@@ -46,7 +46,7 @@ const FORMAT_LABELS: Record<FormatOption, string> = {
 const LANGUAGE_LABELS: Record<LanguagePreference, string> = {
   'english-only': 'English only',
   'open-subtitles': 'Open to subtitles',
-  'specific': 'Specific language',
+  'specific': 'Any language',
 };
 
 const POPULARITY_LABELS: Record<PopularityOption, string> = {
