@@ -60,29 +60,24 @@ function validateRecommendations(parsed: unknown): Recommendation[] {
   return recs as Recommendation[];
 }
 
-async function fetchWikipediaPoster(title: string, year: number, type: 'Movie' | 'Series'): Promise<string | undefined> {
+async function fetchPoster(title: string, year: number, type: 'Movie' | 'Series'): Promise<string | undefined> {
   try {
-    const typeWord = type === 'Movie' ? 'film' : 'television series';
+    const typeWord = type === 'Movie' ? 'film' : 'TV series';
     const query = `${title} ${year} ${typeWord}`;
-    const url = `https://api.wikimedia.org/core/v1/wikipedia/en/search/page?q=${encodeURIComponent(query)}&limit=1`;
+    const url = `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`;
 
     const res = await fetch(url, {
-      headers: { 'User-Agent': 'WatchNow/1.0 (movie-recommendation-app)' },
+      headers: { 'User-Agent': 'WatchNow/1.0' },
       signal: AbortSignal.timeout(6000),
     });
 
     if (!res.ok) return undefined;
 
-    const data = await res.json() as {
-      pages?: Array<{ thumbnail?: { url: string } }>;
-    };
+    const data = await res.json() as { Image?: string };
+    const imagePath = data.Image;
+    if (!imagePath) return undefined;
 
-    const rawUrl = data.pages?.[0]?.thumbnail?.url;
-    if (!rawUrl) return undefined;
-
-    // Ensure https and upscale thumbnail to 500px width
-    const httpsUrl = rawUrl.startsWith('//') ? `https:${rawUrl}` : rawUrl;
-    return httpsUrl.replace(/\/\d+px-/, '/500px-');
+    return imagePath.startsWith('http') ? imagePath : `https://duckduckgo.com${imagePath}`;
   } catch {
     return undefined;
   }
@@ -147,7 +142,7 @@ router.post('/', async (req: Request, res: Response<RecommendResponse | ErrorRes
     const recommendationsWithPosters = await Promise.all(
       recommendations.map(async (rec) => ({
         ...rec,
-        posterUrl: await fetchWikipediaPoster(rec.title, rec.year, rec.type),
+        posterUrl: await fetchPoster(rec.title, rec.year, rec.type),
       }))
     );
     res.status(200).json({ recommendations: recommendationsWithPosters });
