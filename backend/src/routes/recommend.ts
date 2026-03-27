@@ -62,25 +62,27 @@ function validateRecommendations(parsed: unknown): Recommendation[] {
 
 async function fetchWikipediaPoster(title: string, year: number, type: 'Movie' | 'Series'): Promise<string | undefined> {
   try {
-    const typeWord = type === 'Movie' ? 'film' : 'TV series';
+    const typeWord = type === 'Movie' ? 'film' : 'television series';
     const query = `${title} ${year} ${typeWord}`;
-    const url = `https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(query)}&prop=pageimages&pithumbsize=500&format=json&gsrlimit=1`;
+    const url = `https://api.wikimedia.org/core/v1/wikipedia/en/search/page?q=${encodeURIComponent(query)}&limit=1`;
 
     const res = await fetch(url, {
-      headers: { 'User-Agent': 'WatchNow/1.0 (movie recommendation app)' },
-      signal: AbortSignal.timeout(5000),
+      headers: { 'User-Agent': 'WatchNow/1.0 (movie-recommendation-app)' },
+      signal: AbortSignal.timeout(6000),
     });
 
     if (!res.ok) return undefined;
 
     const data = await res.json() as {
-      query?: { pages?: Record<string, { thumbnail?: { source: string } }> };
+      pages?: Array<{ thumbnail?: { url: string } }>;
     };
 
-    const pages = data.query?.pages;
-    if (!pages) return undefined;
+    const rawUrl = data.pages?.[0]?.thumbnail?.url;
+    if (!rawUrl) return undefined;
 
-    return Object.values(pages)[0]?.thumbnail?.source;
+    // Ensure https and upscale thumbnail to 500px width
+    const httpsUrl = rawUrl.startsWith('//') ? `https:${rawUrl}` : rawUrl;
+    return httpsUrl.replace(/\/\d+px-/, '/500px-');
   } catch {
     return undefined;
   }
