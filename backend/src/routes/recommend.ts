@@ -139,13 +139,7 @@ router.post('/', async (req: Request, res: Response<RecommendResponse | ErrorRes
     const cleaned = stripMarkdownFences(rawContent);
     const parsed: unknown = JSON.parse(cleaned);
     const recommendations = validateRecommendations(parsed);
-    const recommendationsWithPosters = await Promise.all(
-      recommendations.map(async (rec) => ({
-        ...rec,
-        posterUrl: await fetchPoster(rec.title, rec.year, rec.type),
-      }))
-    );
-    res.status(200).json({ recommendations: recommendationsWithPosters });
+    res.status(200).json({ recommendations });
   } catch (err) {
     console.error('Failed to parse Claude response:', rawContent);
     console.error('Parse error:', err);
