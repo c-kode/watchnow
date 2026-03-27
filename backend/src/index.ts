@@ -1,17 +1,64 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-import express from 'express';
+import express, { type Request, type Response, type NextFunction } from 'express';
+import cors from 'cors';
+import rateLimit from 'express-rate-limit';
+import recommendRouter from './routes/recommend.js';
+
+// Validate required environment variables at startup
+const requiredEnvVars = ['ANTHROPIC_API_KEY', 'FRONTEND_URL'] as const;
+for (const envVar of requiredEnvVars) {
+  if (!process.env[envVar]) {
+    console.error(`Fatal: Missing required environment variable: ${envVar}`);
+    process.exit(1);
+  }
+}
 
 const app = express();
 const port = process.env.PORT ?? 3001;
+const frontendUrl = process.env.FRONTEND_URL as string;
 
-app.use(express.json());
+// Trust proxy for Railway (needed for accurate rate limiting by IP)
+app.set('trust proxy', 1);
 
-app.get('/health', (_req, res) => {
+// CORS — locked to frontend origin only
+app.use(
+  cors({
+    origin: [frontendUrl, 'http://localhost:3000'],
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type'],
+  })
+);
+
+// Payload limit
+app.use(express.json({ limit: '10kb' }));
+
+// Rate limiting: 20 requests per IP per 15 minutes
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests. Please wait a few minutes.', code: 'RATE_LIMITED' },
+});
+app.use('/api', limiter);
+
+// Routes
+app.use('/api/recommend', recommendRouter);
+
+// Health check
+app.get('/health', (_req: Request, res: Response) => {
   res.json({ status: 'ok', timestamp: Date.now() });
+});
+
+// Global error handler
+app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+  console.error('Unhandled error:', err);
+  res.status(500).json({ error: 'Internal server error', code: 'INTERNAL_ERROR' });
 });
 
 app.listen(port, () => {
   console.log(`WatchNow backend running on port ${port}`);
+  console.log(`CORS allowed origin: ${frontendUrl}`);
 });
