@@ -61,23 +61,28 @@ function validateRecommendations(parsed: unknown): Recommendation[] {
 }
 
 async function fetchPoster(title: string, year: number, type: 'Movie' | 'Series'): Promise<string | undefined> {
+  const token = process.env.TMDB_READ_TOKEN;
+  if (!token) return undefined;
+
   try {
-    const typeWord = type === 'Movie' ? 'film' : 'TV series';
-    const query = `${title} ${year} ${typeWord}`;
-    const url = `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`;
+    const endpoint = type === 'Movie' ? 'search/movie' : 'search/tv';
+    const url = `https://api.themoviedb.org/3/${endpoint}?query=${encodeURIComponent(title)}&year=${year}&page=1`;
 
     const res = await fetch(url, {
-      headers: { 'User-Agent': 'WatchNow/1.0' },
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/json',
+      },
       signal: AbortSignal.timeout(6000),
     });
 
     if (!res.ok) return undefined;
 
-    const data = await res.json() as { Image?: string };
-    const imagePath = data.Image;
-    if (!imagePath) return undefined;
+    const data = await res.json() as { results?: Array<{ poster_path?: string | null }> };
+    const posterPath = data.results?.[0]?.poster_path;
+    if (!posterPath) return undefined;
 
-    return imagePath.startsWith('http') ? imagePath : `https://duckduckgo.com${imagePath}`;
+    return `https://image.tmdb.org/t/p/w500${posterPath}`;
   } catch {
     return undefined;
   }
@@ -139,7 +144,13 @@ router.post('/', async (req: Request, res: Response<RecommendResponse | ErrorRes
     const cleaned = stripMarkdownFences(rawContent);
     const parsed: unknown = JSON.parse(cleaned);
     const recommendations = validateRecommendations(parsed);
-    res.status(200).json({ recommendations });
+    const recommendationsWithPosters = await Promise.all(
+      recommendations.map(async (rec) => ({
+        ...rec,
+        posterUrl: await fetchPoster(rec.title, rec.year, rec.type),
+      }))
+    );
+    res.status(200).json({ recommendations: recommendationsWithPosters });
   } catch (err) {
     console.error('Failed to parse Claude response:', rawContent);
     console.error('Parse error:', err);

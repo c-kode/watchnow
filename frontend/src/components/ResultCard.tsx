@@ -1,7 +1,6 @@
 'use client';
 
 import Image from 'next/image';
-import { useState, useEffect } from 'react';
 import type { Recommendation } from '@/lib/types';
 
 interface ResultCardProps {
@@ -11,25 +10,6 @@ interface ResultCardProps {
 
 export default function ResultCard({ recommendation, index }: ResultCardProps) {
   const delay = `${index * 150}ms`;
-  const [posterUrl, setPosterUrl] = useState<string | null>(
-    recommendation.posterUrl ?? null
-  );
-
-  useEffect(() => {
-    if (posterUrl) return; // already have one from backend
-    const params = new URLSearchParams({
-      title: recommendation.title,
-      year: String(recommendation.year),
-      type: recommendation.type,
-    });
-    fetch(`/api/poster?${params}`)
-      .then((r) => r.json())
-      .then((data: { url: string | null }) => {
-        if (data.url) setPosterUrl(data.url);
-      })
-      .catch(() => null);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const trailerUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(
     `${recommendation.title} ${recommendation.year} official trailer`
@@ -42,9 +22,9 @@ export default function ResultCard({ recommendation, index }: ResultCardProps) {
     >
       {/* Poster */}
       <div className="relative aspect-[2/3] bg-gray-100 shrink-0">
-        {posterUrl ? (
+        {recommendation.posterUrl ? (
           <Image
-            src={posterUrl}
+            src={recommendation.posterUrl}
             alt={`${recommendation.title} poster`}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"

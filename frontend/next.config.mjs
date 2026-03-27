@@ -4,15 +4,7 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'duckduckgo.com',
-      },
-      {
-        protocol: 'https',
-        hostname: '*.duckduckgo.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'upload.wikimedia.org',
+        hostname: 'image.tmdb.org',
       },
     ],
   },
