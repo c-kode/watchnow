@@ -1,101 +1,252 @@
-import Image from "next/image";
+'use client';
+
+import { useReducer, useEffect } from 'react';
+import type { AppState, AppAction, RecommendRequest, Recommendation } from '@/lib/types';
+import { QUESTIONS } from '@/lib/questions';
+import LandingScreen from '@/components/LandingScreen';
+import ProgressBar from '@/components/ProgressBar';
+import QuestionStep from '@/components/QuestionStep';
+import LoadingScreen from '@/components/LoadingScreen';
+import ResultCard from '@/components/ResultCard';
+
+const TOTAL_STEPS = 7;
+
+function setAnswerForStep(
+  answers: Partial<RecommendRequest>,
+  step: number,
+  value: unknown
+): Partial<RecommendRequest> {
+  const next = { ...answers };
+  switch (step) {
+    case 1:
+      next.mood = value as RecommendRequest['mood'];
+      break;
+    case 2:
+      next.time = value as RecommendRequest['time'];
+      break;
+    case 3:
+      next.watchingWith = value as RecommendRequest['watchingWith'];
+      break;
+    case 4:
+      next.format = value as RecommendRequest['format'];
+      break;
+    case 5:
+      next.language = value as RecommendRequest['language'];
+      break;
+    case 6:
+      next.popularity = value as RecommendRequest['popularity'];
+      break;
+    case 7:
+      next.streaming = value as RecommendRequest['streaming'];
+      break;
+  }
+  return next;
+}
+
+function getAnswerForStep(answers: Partial<RecommendRequest>, step: number): unknown {
+  switch (step) {
+    case 1: return answers.mood;
+    case 2: return answers.time;
+    case 3: return answers.watchingWith;
+    case 4: return answers.format;
+    case 5: return answers.language;
+    case 6: return answers.popularity;
+    case 7: return answers.streaming;
+    default: return undefined;
+  }
+}
+
+const initialState: AppState = { screen: 'landing' };
+
+function reducer(state: AppState, action: AppAction): AppState {
+  switch (action.type) {
+    case 'START':
+      return { screen: 'question', step: 1, answers: {} };
+
+    case 'ANSWER': {
+      if (state.screen !== 'question') return state;
+      const newAnswers = setAnswerForStep(state.answers, action.step, action.value);
+      if (action.step < TOTAL_STEPS) {
+        return { screen: 'question', step: action.step + 1, answers: newAnswers };
+      }
+      return { screen: 'loading', answers: newAnswers as RecommendRequest };
+    }
+
+    case 'GO_BACK': {
+      if (state.screen !== 'question') return state;
+      if (state.step === 1) return { screen: 'landing' };
+      return { ...state, step: state.step - 1 };
+    }
+
+    case 'RECEIVE_RESULTS': {
+      if (state.screen !== 'loading') return state;
+      return {
+        screen: 'results',
+        answers: state.answers,
+        recommendations: action.recommendations,
+      };
+    }
+
+    case 'ERROR': {
+      if (state.screen !== 'loading') return state;
+      return { screen: 'error', answers: state.answers, message: action.message };
+    }
+
+    case 'RESET':
+      return { screen: 'landing' };
+
+    default:
+      return state;
+  }
+}
+
+async function fetchRecommendations(
+  answers: RecommendRequest,
+  signal: AbortSignal
+): Promise<Recommendation[]> {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+  const res = await fetch(`${apiUrl}/api/recommend`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(answers),
+    signal,
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Something went wrong.' }));
+    throw new Error((err as { error?: string }).error ?? 'Something went wrong.');
+  }
+
+  const data = (await res.json()) as { recommendations: Recommendation[] };
+  return data.recommendations;
+}
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [state, dispatch] = useReducer(reducer, initialState);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+  useEffect(() => {
+    if (state.screen !== 'loading') return;
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000);
+
+    fetchRecommendations(state.answers, controller.signal)
+      .then((recommendations) => {
+        dispatch({ type: 'RECEIVE_RESULTS', recommendations });
+      })
+      .catch((err: Error) => {
+        if (err.name === 'AbortError') {
+          dispatch({ type: 'ERROR', message: 'Request timed out. Please try again.' });
+        } else {
+          dispatch({ type: 'ERROR', message: err.message || 'Something went wrong.' });
+        }
+      })
+      .finally(() => clearTimeout(timeout));
+
+    return () => {
+      controller.abort();
+      clearTimeout(timeout);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.screen]);
+
+  return (
+    <main className="min-h-screen bg-brand-bg">
+      <div className="max-w-2xl mx-auto px-4 py-12">
+        {state.screen === 'landing' && (
+          <LandingScreen onStart={() => dispatch({ type: 'START' })} />
+        )}
+
+        {state.screen === 'question' && (
+          <div>
+            <ProgressBar currentStep={state.step} totalSteps={TOTAL_STEPS} />
+            <QuestionStep
+              key={state.step}
+              question={QUESTIONS[state.step - 1]}
+              currentAnswer={getAnswerForStep(state.answers, state.step)}
+              stepNumber={state.step}
+              isFirstStep={state.step === 1}
+              onAnswer={(value) =>
+                dispatch({ type: 'ANSWER', step: state.step, value })
+              }
+              onBack={() => dispatch({ type: 'GO_BACK' })}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+          </div>
+        )}
+
+        {state.screen === 'loading' && <LoadingScreen />}
+
+        {state.screen === 'results' && (
+          <div>
+            <div className="mb-8 text-center">
+              <h2 className="font-serif text-3xl text-brand-text mb-2">
+                {state.recommendations.length === 1
+                  ? 'Your pick for tonight'
+                  : 'Your picks for tonight'}
+              </h2>
+              <p className="text-sm text-brand-muted">
+                AI-generated · Verify availability on JustWatch
+              </p>
+            </div>
+
+            <div
+              className={
+                state.recommendations.length === 1
+                  ? 'max-w-xl mx-auto'
+                  : 'grid gap-6 sm:grid-cols-2 lg:grid-cols-3'
+              }
+            >
+              {state.recommendations.map((rec, i) => (
+                <ResultCard key={rec.title} recommendation={rec} index={i} />
+              ))}
+            </div>
+
+            <div className="mt-10 text-center">
+              <button
+                onClick={() => dispatch({ type: 'RESET' })}
+                className="px-6 py-3 rounded-xl border-2 border-gray-200 text-brand-text font-medium hover:border-gray-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2"
+              >
+                Start over
+              </button>
+            </div>
+          </div>
+        )}
+
+        {state.screen === 'error' && (
+          <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+            <div className="text-4xl mb-4" aria-hidden>
+              ⚠️
+            </div>
+            <h2 className="font-serif text-2xl text-brand-text mb-2">
+              Something went wrong
+            </h2>
+            <p className="text-brand-muted mb-2 max-w-sm">{state.message}</p>
+            <p className="text-sm text-brand-muted mb-8">
+              Your answers are saved — you can retry or start fresh.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => dispatch({ type: 'RESET' })}
+                className="px-6 py-3 rounded-xl border-2 border-gray-200 text-brand-text font-medium hover:border-gray-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2"
+              >
+                Start over
+              </button>
+              <button
+                onClick={() =>
+                  dispatch({
+                    type: 'ANSWER',
+                    step: TOTAL_STEPS,
+                    value: state.answers.streaming,
+                  })
+                }
+                className="px-6 py-3 rounded-xl bg-brand-accent text-white font-medium hover:bg-brand-accent-dark transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2"
+              >
+                Try again →
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </main>
   );
 }
