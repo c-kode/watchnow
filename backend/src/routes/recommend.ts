@@ -30,8 +30,8 @@ function validateRecommendations(parsed: unknown): Recommendation[] {
 
   const recs = (parsed as { recommendations: unknown[] }).recommendations;
 
-  if (recs.length < 1 || recs.length > 3) {
-    throw new Error(`Expected 1–3 recommendations, got ${recs.length}`);
+  if (recs.length !== 3) {
+    throw new Error(`Expected exactly 3 recommendations, got ${recs.length}`);
   }
 
   const required = [
