@@ -60,6 +60,32 @@ function validateRecommendations(parsed: unknown): Recommendation[] {
   return recs as Recommendation[];
 }
 
+async function fetchWikipediaPoster(title: string, year: number, type: 'Movie' | 'Series'): Promise<string | undefined> {
+  try {
+    const typeWord = type === 'Movie' ? 'film' : 'TV series';
+    const query = `${title} ${year} ${typeWord}`;
+    const url = `https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(query)}&prop=pageimages&pithumbsize=500&format=json&gsrlimit=1`;
+
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'WatchNow/1.0 (movie recommendation app)' },
+      signal: AbortSignal.timeout(5000),
+    });
+
+    if (!res.ok) return undefined;
+
+    const data = await res.json() as {
+      query?: { pages?: Record<string, { thumbnail?: { source: string } }> };
+    };
+
+    const pages = data.query?.pages;
+    if (!pages) return undefined;
+
+    return Object.values(pages)[0]?.thumbnail?.source;
+  } catch {
+    return undefined;
+  }
+}
+
 router.post('/', async (req: Request, res: Response<RecommendResponse | ErrorResponse>) => {
   // 1. Validate input
   let validatedRequest;
@@ -116,7 +142,13 @@ router.post('/', async (req: Request, res: Response<RecommendResponse | ErrorRes
     const cleaned = stripMarkdownFences(rawContent);
     const parsed: unknown = JSON.parse(cleaned);
     const recommendations = validateRecommendations(parsed);
-    res.status(200).json({ recommendations });
+    const recommendationsWithPosters = await Promise.all(
+      recommendations.map(async (rec) => ({
+        ...rec,
+        posterUrl: await fetchWikipediaPoster(rec.title, rec.year, rec.type),
+      }))
+    );
+    res.status(200).json({ recommendations: recommendationsWithPosters });
   } catch (err) {
     console.error('Failed to parse Claude response:', rawContent);
     console.error('Parse error:', err);

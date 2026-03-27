@@ -66,6 +66,7 @@ export interface Recommendation {
   whyForYou: string;
   availableOn: string[];
   justWatchUrl: string;
+  posterUrl?: string;
 }
 
 export interface RecommendResponse {

@@ -152,7 +152,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-brand-bg">
-      <div className="max-w-2xl mx-auto px-4 py-12">
+      <div className={`mx-auto px-4 py-12 ${state.screen === 'results' ? 'max-w-5xl' : 'max-w-2xl'}`}>
         {state.screen === 'landing' && (
           <LandingScreen onStart={() => dispatch({ type: 'START' })} />
         )}
@@ -192,7 +192,9 @@ export default function Home() {
             <div
               className={
                 state.recommendations.length === 1
-                  ? 'max-w-xl mx-auto'
+                  ? 'max-w-sm mx-auto'
+                  : state.recommendations.length === 2
+                  ? 'grid gap-6 sm:grid-cols-2 max-w-2xl mx-auto'
                   : 'grid gap-6 sm:grid-cols-2 lg:grid-cols-3'
               }
             >

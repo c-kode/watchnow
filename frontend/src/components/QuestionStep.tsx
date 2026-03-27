@@ -126,14 +126,16 @@ export default function QuestionStep({
 
   return (
     <div className="w-full">
-      <h2 className="font-serif text-3xl md:text-4xl text-brand-text mb-2 leading-tight">
-        {question.title}
-      </h2>
-      {question.subtitle ? (
-        <p className="text-brand-muted mb-6">{question.subtitle}</p>
-      ) : (
-        <div className="mb-6" />
-      )}
+      <div className="mb-6">
+        <h2 className="font-serif text-3xl md:text-4xl text-brand-text leading-tight">
+          {question.title}
+        </h2>
+        {question.subtitle && (
+          <span className="inline-block mt-2 px-3 py-1 rounded-full bg-brand-accent-light text-brand-accent text-sm font-semibold tracking-wide">
+            {question.subtitle}
+          </span>
+        )}
+      </div>
 
       {/* Options */}
       <div
