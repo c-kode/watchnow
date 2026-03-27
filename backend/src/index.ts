@@ -22,12 +22,25 @@ const frontendUrl = process.env.FRONTEND_URL as string;
 // Trust proxy for Railway (needed for accurate rate limiting by IP)
 app.set('trust proxy', 1);
 
-// CORS — locked to frontend origin only
+// CORS — locked to frontend origin in production, permissive for localhost in dev
+const allowedOrigins = new Set([
+  frontendUrl,
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://127.0.0.1:3000',
+]);
+
 app.use(
   cors({
-    origin: [frontendUrl, 'http://localhost:3000'],
-    methods: ['GET', 'POST'],
+    origin: (origin, callback) => {
+      // Allow requests with no origin (server-to-server, curl, etc.)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.has(origin)) return callback(null, true);
+      callback(new Error(`CORS: origin not allowed — ${origin}`));
+    },
+    methods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type'],
+    optionsSuccessStatus: 200,
   })
 );
 
