@@ -80,8 +80,8 @@ export default function ResultCard({ recommendation, index }: ResultCardProps) {
 
       {/* Content */}
       <div className="p-5 flex flex-col gap-3 flex-1">
-        {/* Genre tags */}
-        <div className="flex flex-wrap gap-1.5">
+        {/* Genre tags + Ratings */}
+        <div className="flex flex-wrap items-center gap-1.5">
           {recommendation.genres.map((genre) => (
             <span
               key={genre}
@@ -90,21 +90,6 @@ export default function ResultCard({ recommendation, index }: ResultCardProps) {
               {genre}
             </span>
           ))}
-        </div>
-
-        {/* Logline */}
-        <p className="text-sm text-brand-text leading-relaxed">{recommendation.logline}</p>
-
-        {/* Why this for you */}
-        <div className="bg-brand-accent-light rounded-xl px-4 py-3">
-          <p className="text-xs text-brand-accent font-semibold mb-1 uppercase tracking-wide">
-            Why this for you
-          </p>
-          <p className="text-sm text-brand-text leading-relaxed">{recommendation.whyForYou}</p>
-        </div>
-
-        {/* Ratings + Available on */}
-        <div className="flex flex-wrap items-center gap-1.5">
           {showImdb && (
             <span className="flex items-center gap-1 text-xs font-bold bg-yellow-400/15 text-yellow-700 border border-yellow-300 px-2.5 py-0.5 rounded-full">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -118,18 +103,32 @@ export default function ResultCard({ recommendation, index }: ResultCardProps) {
               🍅 {recommendation.rtScore}%
             </span>
           )}
-          {(showImdb || showRt) && recommendation.availableOn.length > 0 && (
-            <span className="text-gray-300 text-xs">|</span>
-          )}
-          {recommendation.availableOn.map((service) => (
-            <span
-              key={service}
-              className="text-xs font-medium text-brand-text bg-gray-50 border border-gray-200 px-2.5 py-0.5 rounded-full"
-            >
-              {service}
-            </span>
-          ))}
         </div>
+
+        {/* Logline */}
+        <p className="text-sm text-brand-text leading-relaxed">{recommendation.logline}</p>
+
+        {/* Why this for you */}
+        <div className="bg-brand-accent-light rounded-xl px-4 py-3">
+          <p className="text-xs text-brand-accent font-semibold mb-1 uppercase tracking-wide">
+            Why this for you
+          </p>
+          <p className="text-sm text-brand-text leading-relaxed">{recommendation.whyForYou}</p>
+        </div>
+
+        {/* Available on */}
+        {recommendation.availableOn.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {recommendation.availableOn.map((service) => (
+              <span
+                key={service}
+                className="text-xs font-medium text-brand-text bg-gray-50 border border-gray-200 px-2.5 py-0.5 rounded-full"
+              >
+                {service}
+              </span>
+            ))}
+          </div>
+        )}
 
         {/* JustWatch button */}
         <a
