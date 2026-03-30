@@ -97,8 +97,9 @@ export default function ResultCard({ recommendation, index }: ResultCardProps) {
           <div className="flex items-center gap-1.5">
             {showImdb && (
               <span className="flex items-center gap-1 text-xs font-bold bg-yellow-400/15 text-yellow-700 border border-yellow-300 px-2.5 py-0.5 rounded-full">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                <svg width="28" height="14" viewBox="0 0 64 32" fill="none" aria-hidden>
+                  <rect width="64" height="32" rx="4" fill="#F5C518"/>
+                  <text x="32" y="23" textAnchor="middle" fill="#000" fontSize="22" fontWeight="bold" fontFamily="Arial,sans-serif">IMDb</text>
                 </svg>
                 {recommendation.imdbRating!.toFixed(1)}
               </span>
