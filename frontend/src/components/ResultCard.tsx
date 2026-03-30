@@ -66,25 +66,6 @@ export default function ResultCard({ recommendation, index }: ResultCardProps) {
           Trailer
         </a>
 
-        {/* Ratings badges — bottom left, above title */}
-        {(showImdb || showRt) && (
-          <div className="absolute bottom-16 left-4 flex gap-2">
-            {showImdb && (
-              <span className="flex items-center gap-1 text-xs font-bold bg-yellow-500 text-black px-2 py-1 rounded-md shadow-md">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                </svg>
-                {recommendation.imdbRating!.toFixed(1)}
-              </span>
-            )}
-            {showRt && (
-              <span className="flex items-center gap-1 text-xs font-bold bg-red-500 text-white px-2 py-1 rounded-md shadow-md">
-                <span aria-hidden>🍅</span>
-                {recommendation.rtScore}%
-              </span>
-            )}
-          </div>
-        )}
 
         {/* Title + meta overlaid on gradient */}
         <div className="absolute bottom-0 left-0 right-0 p-4">
@@ -122,19 +103,33 @@ export default function ResultCard({ recommendation, index }: ResultCardProps) {
           <p className="text-sm text-brand-text leading-relaxed">{recommendation.whyForYou}</p>
         </div>
 
-        {/* Available on */}
-        {recommendation.availableOn.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
-            {recommendation.availableOn.map((service) => (
-              <span
-                key={service}
-                className="text-xs font-medium text-brand-text bg-gray-50 border border-gray-200 px-2.5 py-0.5 rounded-full"
-              >
-                {service}
-              </span>
-            ))}
-          </div>
-        )}
+        {/* Ratings + Available on */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          {showImdb && (
+            <span className="flex items-center gap-1 text-xs font-bold bg-yellow-400/15 text-yellow-700 border border-yellow-300 px-2.5 py-0.5 rounded-full">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+              </svg>
+              {recommendation.imdbRating!.toFixed(1)}
+            </span>
+          )}
+          {showRt && (
+            <span className="flex items-center gap-1 text-xs font-bold bg-red-50 text-red-600 border border-red-200 px-2.5 py-0.5 rounded-full">
+              🍅 {recommendation.rtScore}%
+            </span>
+          )}
+          {(showImdb || showRt) && recommendation.availableOn.length > 0 && (
+            <span className="text-gray-300 text-xs">|</span>
+          )}
+          {recommendation.availableOn.map((service) => (
+            <span
+              key={service}
+              className="text-xs font-medium text-brand-text bg-gray-50 border border-gray-200 px-2.5 py-0.5 rounded-full"
+            >
+              {service}
+            </span>
+          ))}
+        </div>
 
         {/* JustWatch button */}
         <a
