@@ -67,6 +67,8 @@ export interface Recommendation {
   availableOn: string[];
   justWatchUrl: string;
   posterUrl?: string;
+  imdbRating?: number | null;
+  rtScore?: number | null;
 }
 
 export interface RecommendResponse {

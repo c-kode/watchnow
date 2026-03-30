@@ -15,6 +15,11 @@ export default function ResultCard({ recommendation, index }: ResultCardProps) {
     `${recommendation.title} ${recommendation.year} official trailer`
   )}`;
 
+  const showImdb =
+    recommendation.imdbRating != null && recommendation.imdbRating > 5;
+  const showRt =
+    recommendation.rtScore != null && recommendation.rtScore > 60;
+
   return (
     <article
       className="bg-white rounded-2xl overflow-hidden shadow-lg border border-gray-100 flex flex-col opacity-0 animate-fade-in-up"
@@ -60,6 +65,26 @@ export default function ResultCard({ recommendation, index }: ResultCardProps) {
           </svg>
           Trailer
         </a>
+
+        {/* Ratings badges — bottom left, above title */}
+        {(showImdb || showRt) && (
+          <div className="absolute bottom-16 left-4 flex gap-2">
+            {showImdb && (
+              <span className="flex items-center gap-1 text-xs font-bold bg-yellow-500 text-black px-2 py-1 rounded-md shadow-md">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                </svg>
+                {recommendation.imdbRating!.toFixed(1)}
+              </span>
+            )}
+            {showRt && (
+              <span className="flex items-center gap-1 text-xs font-bold bg-red-500 text-white px-2 py-1 rounded-md shadow-md">
+                <span aria-hidden>🍅</span>
+                {recommendation.rtScore}%
+              </span>
+            )}
+          </div>
+        )}
 
         {/* Title + meta overlaid on gradient */}
         <div className="absolute bottom-0 left-0 right-0 p-4">

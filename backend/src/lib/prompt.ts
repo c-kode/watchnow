@@ -88,7 +88,9 @@ You must respond with ONLY a JSON object in this exact shape — no markdown fen
       "logline": "string (one punchy sentence)",
       "whyForYou": "string (2–3 sentences referencing the user's specific preferences)",
       "availableOn": ["string (streaming service names)"],
-      "justWatchUrl": "string"
+      "justWatchUrl": "string",
+      "imdbRating": number or null (e.g. 7.8 — the IMDb score out of 10, use your best knowledge; null if unknown),
+      "rtScore": number or null (e.g. 85 — the Rotten Tomatoes critics score as a percentage; null if unknown)
     }
   ]
 }`;
