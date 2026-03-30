@@ -80,8 +80,8 @@ export default function ResultCard({ recommendation, index }: ResultCardProps) {
 
       {/* Content */}
       <div className="p-5 flex flex-col gap-3 flex-1">
-        {/* Genre tags + Ratings */}
-        <div className="flex flex-wrap items-center gap-1.5">
+        {/* Genre tags */}
+        <div className="flex flex-wrap gap-1.5">
           {recommendation.genres.map((genre) => (
             <span
               key={genre}
@@ -90,20 +90,26 @@ export default function ResultCard({ recommendation, index }: ResultCardProps) {
               {genre}
             </span>
           ))}
-          {showImdb && (
-            <span className="flex items-center gap-1 text-xs font-bold bg-yellow-400/15 text-yellow-700 border border-yellow-300 px-2.5 py-0.5 rounded-full">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-              </svg>
-              {recommendation.imdbRating!.toFixed(1)}
-            </span>
-          )}
-          {showRt && (
-            <span className="flex items-center gap-1 text-xs font-bold bg-red-50 text-red-600 border border-red-200 px-2.5 py-0.5 rounded-full">
-              🍅 {recommendation.rtScore}%
-            </span>
-          )}
         </div>
+
+        {/* Ratings */}
+        {(showImdb || showRt) && (
+          <div className="flex items-center gap-1.5">
+            {showImdb && (
+              <span className="flex items-center gap-1 text-xs font-bold bg-yellow-400/15 text-yellow-700 border border-yellow-300 px-2.5 py-0.5 rounded-full">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                </svg>
+                {recommendation.imdbRating!.toFixed(1)}
+              </span>
+            )}
+            {showRt && (
+              <span className="flex items-center gap-1 text-xs font-bold bg-red-50 text-red-600 border border-red-200 px-2.5 py-0.5 rounded-full">
+                🍅 {recommendation.rtScore}%
+              </span>
+            )}
+          </div>
+        )}
 
         {/* Logline */}
         <p className="text-sm text-brand-text leading-relaxed">{recommendation.logline}</p>
