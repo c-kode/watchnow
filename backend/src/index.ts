@@ -59,6 +59,52 @@ const limiter = rateLimit({
 });
 app.use('/api', limiter);
 
+// Actor search endpoint (TMDB person search for autocomplete)
+app.get('/api/actors', async (req: Request, res: Response) => {
+  const query = typeof req.query.q === 'string' ? req.query.q.trim() : '';
+  if (query.length < 2) {
+    res.json({ results: [] });
+    return;
+  }
+
+  const token = process.env.TMDB_READ_TOKEN;
+  if (!token) {
+    res.json({ results: [] });
+    return;
+  }
+
+  try {
+    const url = `https://api.themoviedb.org/3/search/person?query=${encodeURIComponent(query)}&page=1`;
+    const tmdbRes = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!tmdbRes.ok) {
+      res.json({ results: [] });
+      return;
+    }
+    const data = (await tmdbRes.json()) as {
+      results?: Array<{
+        name: string;
+        known_for_department?: string;
+        profile_path?: string | null;
+        popularity?: number;
+      }>;
+    };
+    // Filter to actors only and return top 8
+    const actors = (data.results ?? [])
+      .filter((p) => p.known_for_department === 'Acting')
+      .slice(0, 8)
+      .map((p) => ({
+        name: p.name,
+        imageUrl: p.profile_path ? `https://image.tmdb.org/t/p/w185${p.profile_path}` : null,
+      }));
+    res.json({ results: actors });
+  } catch {
+    res.json({ results: [] });
+  }
+});
+
 // Routes
 app.use('/api/recommend', recommendRouter);
 
