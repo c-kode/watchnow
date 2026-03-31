@@ -15,6 +15,7 @@ export default function SaveButton({ recommendations }: SaveButtonProps) {
   const save = useMutation(api.savedSessions.save);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   if (saved) {
     return (
@@ -38,14 +39,18 @@ export default function SaveButton({ recommendations }: SaveButtonProps) {
   }
 
   return (
+    <div className="flex flex-col items-center gap-1">
+    {error && <p className="text-xs text-red-500">{error}</p>}
     <button
       disabled={saving}
       onClick={async () => {
+        setError(null);
         setSaving(true);
         try {
           await save({ recommendations });
           setSaved(true);
-        } catch {
+        } catch (err) {
+          setError(err instanceof Error ? err.message : 'Failed to save');
           setSaving(false);
         }
       }}
@@ -53,5 +58,6 @@ export default function SaveButton({ recommendations }: SaveButtonProps) {
     >
       {saving ? 'Saving...' : 'Save these picks'}
     </button>
+    </div>
   );
 }
