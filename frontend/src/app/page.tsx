@@ -8,6 +8,8 @@ import ProgressBar from '@/components/ProgressBar';
 import QuestionStep from '@/components/QuestionStep';
 import LoadingScreen from '@/components/LoadingScreen';
 import ResultCard from '@/components/ResultCard';
+import AuthHeader from '@/components/AuthHeader';
+import SaveButton from '@/components/SaveButton';
 
 const TOTAL_STEPS = 7;
 
@@ -152,7 +154,12 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-brand-bg">
-      <div className={`mx-auto px-4 py-12 ${state.screen === 'results' ? 'max-w-5xl' : 'max-w-2xl'}`}>
+      {/* Auth header — top right */}
+      <div className="mx-auto max-w-5xl px-4 pt-4 flex justify-end">
+        <AuthHeader />
+      </div>
+
+      <div className={`mx-auto px-4 py-8 ${state.screen === 'results' ? 'max-w-5xl' : 'max-w-2xl'}`}>
         {state.screen === 'landing' && (
           <LandingScreen onStart={() => dispatch({ type: 'START' })} />
         )}
@@ -203,13 +210,14 @@ export default function Home() {
               ))}
             </div>
 
-            <div className="mt-10 text-center">
+            <div className="mt-10 flex justify-center gap-3">
               <button
                 onClick={() => dispatch({ type: 'RESET' })}
                 className="px-6 py-3 rounded-xl border-2 border-gray-200 text-brand-text font-medium hover:border-gray-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2"
               >
                 Start over
               </button>
+              <SaveButton recommendations={state.recommendations} />
             </div>
           </div>
         )}
