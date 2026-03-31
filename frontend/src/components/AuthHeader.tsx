@@ -18,7 +18,7 @@ export default function AuthHeader() {
           >
             My Saved
           </Link>
-          <UserButton afterSignOutUrl="/" />
+          <UserButton />
         </>
       ) : (
         <SignInButton mode="modal">
