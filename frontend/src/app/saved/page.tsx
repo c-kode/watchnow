@@ -7,6 +7,7 @@ import type { Id } from '../../../convex/_generated/dataModel';
 import ResultCard from '@/components/ResultCard';
 import AuthHeader from '@/components/AuthHeader';
 import Link from 'next/link';
+import type { Recommendation } from '@/lib/types';
 
 export default function SavedPage() {
   const { isSignedIn, isLoaded } = useUser();
@@ -88,7 +89,7 @@ export default function SavedPage() {
                 {session.recommendations.map((rec, i) => (
                   <ResultCard
                     key={rec.title}
-                    recommendation={rec}
+                    recommendation={rec as unknown as Recommendation}
                     index={i}
                   />
                 ))}
