@@ -25,6 +25,8 @@ app.set('trust proxy', 1);
 // CORS — locked to frontend origin in production, permissive for localhost in dev
 const allowedOrigins = new Set([
   frontendUrl,
+  'https://poppix.co',
+  'https://www.poppix.co',
   'http://localhost:3000',
   'http://localhost:3001',
   'http://127.0.0.1:3000',
