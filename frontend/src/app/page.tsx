@@ -10,6 +10,7 @@ import LoadingScreen from '@/components/LoadingScreen';
 import ResultCard from '@/components/ResultCard';
 import AuthHeader from '@/components/AuthHeader';
 import SaveButton from '@/components/SaveButton';
+import AutoLogUsage from '@/components/AutoLogUsage';
 
 const TOTAL_STEPS = 7;
 
@@ -185,6 +186,7 @@ export default function Home() {
 
         {state.screen === 'results' && (
           <div>
+            <AutoLogUsage query={state.answers} recommendations={state.recommendations} />
             <div className="mb-8 text-center">
               <h2 className="font-serif text-3xl text-brand-text mb-2">
                 {state.recommendations.length === 1

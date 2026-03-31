@@ -9,6 +9,7 @@
  */
 
 import type * as savedSessions from "../savedSessions.js";
+import type * as usageHistory from "../usageHistory.js";
 
 import type {
   ApiFromModules,
@@ -18,6 +19,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   savedSessions: typeof savedSessions;
+  usageHistory: typeof usageHistory;
 }>;
 
 /**
