@@ -46,6 +46,11 @@ export interface StreamingInput {
   country?: string;
 }
 
+export interface ReleaseDateFilter {
+  year: number;
+  direction: 'before' | 'after';
+}
+
 export interface RecommendRequest {
   mood: MoodOption[];
   time: TimeOption;
@@ -54,6 +59,8 @@ export interface RecommendRequest {
   language: LanguagePreferenceInput;
   popularity: PopularityOption;
   streaming: StreamingInput;
+  releaseDate?: ReleaseDateFilter;
+  cast?: string;
 }
 
 export interface Recommendation {

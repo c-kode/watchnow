@@ -10,6 +10,7 @@ interface QuestionStepProps {
   onBack: () => void;
   isFirstStep: boolean;
   stepNumber: number;
+  onAdditionalFilters?: (currentValue: unknown) => void;
 }
 
 function initSelected(answer: unknown, questionId: string): string[] {
@@ -47,6 +48,7 @@ export default function QuestionStep({
   onBack,
   isFirstStep,
   stepNumber,
+  onAdditionalFilters,
 }: QuestionStepProps) {
   const [selected, setSelected] = useState<string[]>(() =>
     initSelected(currentAnswer, question.id)
@@ -204,7 +206,23 @@ export default function QuestionStep({
               onClick={onBack}
               className="px-6 py-3.5 rounded-xl border-2 border-gray-200 text-brand-text font-medium hover:border-gray-300 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2 min-h-[52px]"
             >
-              ← Back
+              &larr; Back
+            </button>
+          )}
+          {stepNumber === 7 && onAdditionalFilters && (
+            <button
+              onClick={() => {
+                if (!valid) return;
+                onAdditionalFilters(buildAnswer(selected, conditionalText, extraText));
+              }}
+              disabled={!valid}
+              className={`px-6 py-3.5 rounded-xl font-medium transition-all duration-150 min-h-[52px] border-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2 ${
+                valid
+                  ? 'border-brand-accent text-brand-accent bg-white hover:bg-brand-accent-light'
+                  : 'border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed'
+              }`}
+            >
+              Additional filters
             </button>
           )}
           <button
@@ -216,7 +234,7 @@ export default function QuestionStep({
                 : 'bg-gray-100 text-gray-400 cursor-not-allowed'
             }`}
           >
-            {stepNumber === 7 ? 'Find something to watch →' : 'Next →'}
+            {stepNumber === 7 ? 'Find something to watch \u2192' : 'Next \u2192'}
           </button>
         </div>
       )}

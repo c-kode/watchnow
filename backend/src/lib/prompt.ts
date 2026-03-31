@@ -111,7 +111,7 @@ export function buildPrompt(request: RecommendRequest): string {
     language = LANGUAGE_LABELS[request.language.preference];
   }
 
-  return `Find me something to watch based on these preferences:
+  let prompt = `Find me something to watch based on these preferences:
 
 - Mood: ${moods}
 - Time available: ${time}
@@ -121,4 +121,15 @@ export function buildPrompt(request: RecommendRequest): string {
 - Discovery preference: ${popularity}
 - Streaming services: ${services}
 - Country: ${country}`;
+
+  if (request.releaseDate) {
+    const dir = request.releaseDate.direction === 'before' ? 'before' : 'after';
+    prompt += `\n- Release date: ${dir} ${request.releaseDate.year}`;
+  }
+
+  if (request.cast?.trim()) {
+    prompt += `\n- Must feature: ${request.cast.trim()}`;
+  }
+
+  return prompt;
 }

@@ -40,6 +40,11 @@ export default defineSchema({
         services: v.array(v.string()),
         country: v.optional(v.string()),
       }),
+      releaseDate: v.optional(v.object({
+        year: v.number(),
+        direction: v.string(),
+      })),
+      cast: v.optional(v.string()),
     }),
     recommendations: v.array(
       v.object({

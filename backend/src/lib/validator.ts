@@ -40,6 +40,11 @@ const StreamingServiceSchema = z.enum([
   'other',
 ]);
 
+const ReleaseDateSchema = z.object({
+  year: z.number().int().min(1900).max(2030),
+  direction: z.enum(['before', 'after']),
+});
+
 const RecommendRequestSchema = z.object({
   mood: z
     .array(MoodOptionSchema)
@@ -64,6 +69,8 @@ const RecommendRequestSchema = z.object({
     services: z.array(StreamingServiceSchema).min(1, 'Select at least one streaming service'),
     country: z.string().trim().max(60).optional(),
   }),
+  releaseDate: ReleaseDateSchema.optional(),
+  cast: z.string().trim().max(100).optional(),
 });
 
 export class ValidationError extends Error {

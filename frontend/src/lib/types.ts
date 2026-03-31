@@ -46,6 +46,11 @@ export interface StreamingInput {
   country?: string;
 }
 
+export interface ReleaseDateFilter {
+  year: number;
+  direction: 'before' | 'after';
+}
+
 export interface RecommendRequest {
   mood: MoodOption[];
   time: TimeOption;
@@ -54,6 +59,8 @@ export interface RecommendRequest {
   language: LanguagePreferenceInput;
   popularity: PopularityOption;
   streaming: StreamingInput;
+  releaseDate?: ReleaseDateFilter;
+  cast?: string;
 }
 
 export interface Recommendation {
@@ -121,6 +128,9 @@ export type AppAction =
   | { type: 'START' }
   | { type: 'ANSWER'; step: number; value: unknown }
   | { type: 'GO_BACK' }
+  | { type: 'GO_TO_FILTERS'; streamingValue: unknown }
+  | { type: 'SUBMIT' }
+  | { type: 'SKIP_FILTER'; step: number }
   | { type: 'RECEIVE_RESULTS'; recommendations: Recommendation[] }
   | { type: 'ERROR'; message: string }
   | { type: 'RESET' };

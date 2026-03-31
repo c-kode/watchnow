@@ -11,8 +11,12 @@ import ResultCard from '@/components/ResultCard';
 import AuthHeader from '@/components/AuthHeader';
 import SaveButton from '@/components/SaveButton';
 import AutoLogUsage from '@/components/AutoLogUsage';
+import ReleaseDateStep from '@/components/ReleaseDateStep';
+import CastStep from '@/components/CastStep';
+import type { ReleaseDateFilter } from '@/lib/types';
 
 const TOTAL_STEPS = 7;
+const TOTAL_WITH_OPTIONAL = 9;
 
 function setAnswerForStep(
   answers: Partial<RecommendRequest>,
@@ -42,6 +46,12 @@ function setAnswerForStep(
     case 7:
       next.streaming = value as RecommendRequest['streaming'];
       break;
+    case 8:
+      next.releaseDate = value as ReleaseDateFilter;
+      break;
+    case 9:
+      next.cast = value as string;
+      break;
   }
   return next;
 }
@@ -55,6 +65,8 @@ function getAnswerForStep(answers: Partial<RecommendRequest>, step: number): unk
     case 5: return answers.language;
     case 6: return answers.popularity;
     case 7: return answers.streaming;
+    case 8: return answers.releaseDate;
+    case 9: return answers.cast;
     default: return undefined;
   }
 }
@@ -69,15 +81,53 @@ function reducer(state: AppState, action: AppAction): AppState {
     case 'ANSWER': {
       if (state.screen !== 'question') return state;
       const newAnswers = setAnswerForStep(state.answers, action.step, action.value);
+      // Steps 1-6 auto-advance to next step
       if (action.step < TOTAL_STEPS) {
         return { screen: 'question', step: action.step + 1, answers: newAnswers };
       }
-      return { screen: 'loading', answers: newAnswers as RecommendRequest };
+      // Step 7 "Find something to watch" → submit
+      if (action.step === TOTAL_STEPS) {
+        return { screen: 'loading', answers: newAnswers as RecommendRequest };
+      }
+      // Step 8 (release date) → advance to step 9 (cast)
+      if (action.step === 8) {
+        return { screen: 'question', step: 9, answers: newAnswers };
+      }
+      // Step 9 (cast) → submit
+      if (action.step === 9) {
+        return { screen: 'loading', answers: newAnswers as RecommendRequest };
+      }
+      return state;
+    }
+
+    case 'GO_TO_FILTERS': {
+      if (state.screen !== 'question') return state;
+      const answersWithStreaming = setAnswerForStep(state.answers, 7, action.streamingValue);
+      return { screen: 'question', step: 8, answers: answersWithStreaming };
+    }
+
+    case 'SUBMIT': {
+      if (state.screen !== 'question') return state;
+      return { screen: 'loading', answers: state.answers as RecommendRequest };
+    }
+
+    case 'SKIP_FILTER': {
+      if (state.screen !== 'question') return state;
+      // Skip step 8 → go to step 9
+      if (action.step === 8) {
+        return { screen: 'question', step: 9, answers: state.answers };
+      }
+      // Skip step 9 → submit
+      return { screen: 'loading', answers: state.answers as RecommendRequest };
     }
 
     case 'GO_BACK': {
       if (state.screen !== 'question') return state;
       if (state.step === 1) return { screen: 'landing' };
+      // Going back from step 8 → step 7
+      if (state.step === 8) return { ...state, step: 7 };
+      // Going back from step 9 → step 8
+      if (state.step === 9) return { ...state, step: 8 };
       return { ...state, step: state.step - 1 };
     }
 
@@ -165,7 +215,7 @@ export default function Home() {
           <LandingScreen onStart={() => dispatch({ type: 'START' })} />
         )}
 
-        {state.screen === 'question' && (
+        {state.screen === 'question' && state.step <= TOTAL_STEPS && (
           <div>
             <ProgressBar currentStep={state.step} totalSteps={TOTAL_STEPS} />
             <QuestionStep
@@ -177,6 +227,39 @@ export default function Home() {
               onAnswer={(value) =>
                 dispatch({ type: 'ANSWER', step: state.step, value })
               }
+              onBack={() => dispatch({ type: 'GO_BACK' })}
+              onAdditionalFilters={
+                state.step === 7
+                  ? (streamingValue: unknown) => dispatch({ type: 'GO_TO_FILTERS', streamingValue })
+                  : undefined
+              }
+            />
+          </div>
+        )}
+
+        {state.screen === 'question' && state.step === 8 && (
+          <div>
+            <ProgressBar currentStep={TOTAL_STEPS} totalSteps={TOTAL_STEPS} />
+            <ReleaseDateStep
+              currentAnswer={state.answers.releaseDate as ReleaseDateFilter | undefined}
+              onAnswer={(value) =>
+                dispatch({ type: 'ANSWER', step: 8, value })
+              }
+              onSkip={() => dispatch({ type: 'SKIP_FILTER', step: 8 })}
+              onBack={() => dispatch({ type: 'GO_BACK' })}
+            />
+          </div>
+        )}
+
+        {state.screen === 'question' && state.step === 9 && (
+          <div>
+            <ProgressBar currentStep={TOTAL_STEPS} totalSteps={TOTAL_STEPS} />
+            <CastStep
+              currentAnswer={state.answers.cast as string | undefined}
+              onAnswer={(value) =>
+                dispatch({ type: 'ANSWER', step: 9, value })
+              }
+              onSkip={() => dispatch({ type: 'SKIP_FILTER', step: 9 })}
               onBack={() => dispatch({ type: 'GO_BACK' })}
             />
           </div>
