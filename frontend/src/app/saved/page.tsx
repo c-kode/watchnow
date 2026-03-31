@@ -1,13 +1,121 @@
 'use client';
 
+import { useState } from 'react';
 import { useUser, SignInButton } from '@clerk/nextjs';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 import type { Id } from '../../../convex/_generated/dataModel';
+import Image from 'next/image';
 import ResultCard from '@/components/ResultCard';
 import AuthHeader from '@/components/AuthHeader';
 import Link from 'next/link';
 import type { Recommendation } from '@/lib/types';
+
+function SessionCard({
+  session,
+  onRemove,
+}: {
+  session: {
+    _id: string;
+    savedAt: number;
+    recommendations: Array<Record<string, unknown>>;
+  };
+  onRemove: () => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const recs = session.recommendations as unknown as Recommendation[];
+
+  return (
+    <div className="mb-6">
+      {/* Collapsed summary row */}
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="w-full text-left bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow px-5 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2"
+      >
+        <div className="flex items-center gap-4">
+          {/* Small poster thumbnails */}
+          <div className="flex -space-x-3 shrink-0">
+            {recs.map((rec) => (
+              <div
+                key={rec.title}
+                className="w-12 h-16 rounded-lg overflow-hidden border-2 border-white shadow-sm relative shrink-0"
+              >
+                {rec.posterUrl ? (
+                  <Image
+                    src={rec.posterUrl}
+                    alt={rec.title}
+                    fill
+                    sizes="48px"
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center">
+                    <span className="text-white/40 text-xs font-serif">
+                      {rec.title[0]}
+                    </span>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Titles + date */}
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-brand-text truncate">
+              {recs.map((r) => r.title).join(' · ')}
+            </p>
+            <p className="text-xs text-brand-muted mt-0.5">
+              {new Date(session.savedAt).toLocaleDateString('en-US', {
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric',
+              })}
+            </p>
+          </div>
+
+          {/* Expand chevron */}
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className={`text-brand-muted shrink-0 transition-transform duration-200 ${
+              expanded ? 'rotate-180' : ''
+            }`}
+          >
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </div>
+      </button>
+
+      {/* Expanded full cards */}
+      {expanded && (
+        <div className="mt-4 ml-2">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-3">
+            {recs.map((rec, i) => (
+              <ResultCard key={rec.title} recommendation={rec} index={i} />
+            ))}
+          </div>
+          <div className="flex justify-end">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemove();
+              }}
+              className="text-xs text-red-400 hover:text-red-600 transition-colors"
+            >
+              Remove from saved
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function SavedPage() {
   const { isSignedIn, isLoaded } = useUser();
@@ -66,35 +174,13 @@ export default function SavedPage() {
 
         {isSignedIn &&
           sessions?.map((session) => (
-            <div key={session._id} className="mb-14">
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-sm text-brand-muted">
-                  Saved on{' '}
-                  {new Date(session.savedAt).toLocaleDateString('en-US', {
-                    month: 'long',
-                    day: 'numeric',
-                    year: 'numeric',
-                  })}
-                </p>
-                <button
-                  onClick={() =>
-                    removeMutation({ sessionId: session._id as Id<'savedSessions'> })
-                  }
-                  className="text-xs text-red-400 hover:text-red-600 transition-colors"
-                >
-                  Remove
-                </button>
-              </div>
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {session.recommendations.map((rec, i) => (
-                  <ResultCard
-                    key={rec.title}
-                    recommendation={rec as unknown as Recommendation}
-                    index={i}
-                  />
-                ))}
-              </div>
-            </div>
+            <SessionCard
+              key={session._id}
+              session={session}
+              onRemove={() =>
+                removeMutation({ sessionId: session._id as Id<'savedSessions'> })
+              }
+            />
           ))}
       </div>
     </main>
